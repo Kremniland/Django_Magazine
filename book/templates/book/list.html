@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+
+{% if name_book and count_book %}
+<div>
+    <h1>Написанная книга</h1>
+    <h2>{{ name_book }}</h2>
+    <h3>{{ count_book }}</h3>
+    {% if count_book == '1000' %}
+        <p>Бестселлер</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<a href="/book/index/">Назад</a>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Домашняя страница</title>
+</head>
+<body>
+
+<h1>Привет шаблон</h1>
+
+<a href="/book/list/">Список книг (абсолютный путь)</a><br>
+<a href="list/">Список книг (относительный путь)</a><br>
+<br>
+<a href="{% url 'book_list' %}">Список книг из БД</a><br>
+
+
+<h1>Отправка данных через GET</h1>
+<form action="/book/list/" method="get">
+    <label> Название книги <input type="text" name="name"> </label><br>
+    <label>Количество книг <input type="number" name="count"> </label><br>
+    {# {'name': 'Книга', 'count': '1000'} - в таком формате будут отправлены данные в переменную request.GET #}
+
+    {# <label><input type="submit" value="Отправить (input)"></label><br> #}
+    <!-- == -->
+    <button type="submit">Отправить GET(button)</button><br>
+</form>
+
+<h1>Отправка данных через POST</h1>
+<form action="/book/list/" method="post">
+    {% csrf_token %}
+    <label> Название книги <input type="text" name="name"> </label><br>
+    <label>Количество книг <input type="number" name="count"> </label><br>
+    <button type="submit">Отправить POST(button)</button><br>
+</form>
+
+</body>
+</html>
