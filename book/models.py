@@ -23,6 +23,7 @@ class books(models.Model):
         verbose_name_plural = 'Книги'  # Псевдоним таблицы во мн. числе
         ordering = ['name', '-price']  # Сортировка полей
 
+
 # Books
 #   name
 #   description
@@ -34,7 +35,7 @@ class books(models.Model):
 #   photo
 #   exists
 
-
+# Таблица для связи один ко многим
 class publishing_house(models.Model):
     title = models.CharField(max_length=150, verbose_name='Название')
     agent_firstname = models.CharField(max_length=50, verbose_name='Фамилия представителя')
@@ -50,11 +51,12 @@ class publishing_house(models.Model):
         verbose_name_plural = 'Издатели'
 
 
+# Связь многие ко многим
 class category(models.Model):
     title = models.CharField(max_length=100, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
 
-    books = models.ManyToManyField(books)
+    books = models.ManyToManyField(books)  # through='category_book')
 
     def __str__(self):
         return self.title
@@ -64,14 +66,57 @@ class category(models.Model):
         verbose_name_plural = 'Категории'
 
 
-class passport_book(models.Model):
-    article = models.IntegerField(verbose_name='Артикль')
-    features = models.CharField(max_length=255,verbose_name='Свойства книги')
+# Связь многие ко многим (через ручную техническую таблицу)
+class order(models.Model):
+    date_create = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания заказа')
+    date_finish = models.DateTimeField(null=True, blank=True, verbose_name='Дата завершения заказа')  # ( ,"")
+    price = models.FloatField(null=True, blank=True, verbose_name='Цена заказа')
+    address_delivery = models.CharField(max_length=255, verbose_name='Адрес доставки')
 
-    book = models.OneToOneField(books, on_delete=models.PROTECT, primary_key=True)
+    books = models.ManyToManyField(books, through='pos_order')
 
     def __str__(self):
-        return self.article
+        return str(self.date_create) + " " + str(self.price) + " " + self.address_delivery
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+        ordering = ['date_create']
+
+
+# (Промежуточная (техническая) таблица для связи многие ко многим (Order, Books))
+class pos_order(models.Model):
+    book = models.ForeignKey(books, on_delete=models.CASCADE, verbose_name='Книга')
+    order = models.ForeignKey(order, on_delete=models.CASCADE, verbose_name='Заказ')
+    count_books = models.IntegerField(verbose_name='Количество книг')
+
+    def __str__(self):
+        return self.order.__str__() + " " + self.book.__str__() + "|" + str(self.count_books)
+
+    class Meta:
+        verbose_name = 'Позиция заказа'
+        verbose_name_plural = 'Позиции заказов'
+        ordering = ['order']
+
+
+# Связь один ко одному
+class passport_book(models.Model):
+    article = models.IntegerField(verbose_name='Артикль')
+    features = models.CharField(max_length=255, verbose_name='Свойства книги')
+
+    book = models.OneToOneField(books, on_delete=models.PROTECT, primary_key=True, verbose_name='Книга')
+
+    # id integer PRIMARY KEY                            параметр - primary_key=False
+    # article integer
+    # features varchar
+    # book integer FOREIGN KEY books(id) UNIQUE
+
+    # book integer FOREIGN KEY books(id) PRIMARY KEY    параметр - primary_key=True
+    # article integer
+    # features varchar
+
+    def __str__(self):
+        return str(self.article) + " | " + self.book.__str__()
 
     class Meta:
         verbose_name = 'Паспорт книги'

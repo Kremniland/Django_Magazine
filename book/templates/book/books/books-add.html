@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Добавление новой книги
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+            <label>Название книги <input type="text" name="name"></label><br>
+            <label>Количество страниц <input type="number" name="count_pages"></label><br>
+            <label>Цена книги <input type="number" name="price"></label><br>
+            <button type="submit">Добавить книгу</button>
+            <br>
+        </form>
+    </div>
+
+
+    <div class="container">
+        <a href="{% url 'book_list' %}" class="btn btn-info btn-lg">Вернутся к списку книг</a>
+    </div>
+{% endblock %}

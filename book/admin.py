@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import books
+from .models import books, publishing_house, passport_book, order, pos_order
 
 
 # Отображение списка в админке
@@ -18,3 +18,8 @@ admin.site.register(books, BooksAdmin)
 #  Название модели и сортировка её атрибутов прописывается в классе Meta (models)
 #  Отображение списка записей в админке прописывается в модуле админки приложения (admin)
 #  Название приложения прописывается в настройках приложения (apps)
+
+admin.site.register(publishing_house)
+admin.site.register(passport_book)
+admin.site.register(order)
+admin.site.register(pos_order)
