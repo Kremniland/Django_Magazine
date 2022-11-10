@@ -3,17 +3,75 @@
 {% load static %}
 
 {% block title %}
-    Добавление новой книги
+    {{ title }}
 {% endblock %}
 
 {% block content %}
     <div class="container">
         <form method="post">
             {% csrf_token %}
-            <label>Название книги <input type="text" name="name"></label><br>
-            <label>Количество страниц <input type="number" name="count_pages"></label><br>
-            <label>Цена книги <input type="number" name="price"></label><br>
-            <button type="submit">Добавить книгу</button>
+            {% comment %}
+            <label class="form-label">Название книги
+                <input type="text" name="name"  class="form-control"></label><br>
+
+            <label class="form-label">Количество страниц
+                <input type="number" name="count_pages" class="form-control"></label><br>
+
+            <label class="form-label">Цена книги
+                <input type="number" name="price" class="form-control"></label><br>
+            {% endcomment %}
+
+            {# {{ custom_form }} #}
+
+            {% comment %}
+            <table>
+                {{ custom_form.as_table }}
+            </table>
+            {% endcomment %}
+
+            {% comment %}
+            <div class="container">
+                {{ custom_form.as_div }}
+            </div>
+            {% endcomment %}
+
+            {% comment %}
+            <div class="container">
+                {{ custom_form.as_p }}
+            </div>
+            {% endcomment %}
+
+            {% comment %}
+            <ul class="list-group">
+                {{ custom_form.as_ul }}
+            </ul>
+            {% endcomment %}
+
+            {% comment %}
+            <div class="container">
+                <div class="container">
+                    <label for="{{ custom_form.name.id_for_label }}">{{ custom_form.name.label }}</label>
+                    {#            ^привязка id к тегу input name^    ^вывод псевдонима поля name^       #}
+                    {{ custom_form.name }}
+                </div>
+
+                {{ custom_form.price }}
+            </div>
+            {% endcomment %}
+
+            {% for field in custom_form %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text">{{ field.label }}</span>
+                    {{ field }}
+
+                    <div id="{{ field.auto_id }}" class="invalid-feedback ">
+                        {{ field.errors }}
+                    </div>
+                </div>
+            {% endfor %}
+
+
+            <button type="submit" class="btn btn-success btn-lg">Добавить книгу</button>
             <br>
         </form>
     </div>
