@@ -9,6 +9,13 @@ urlpatterns = [
     path('books/<int:book_id>/', v.template_book_detail, name='book_detail'),
     path('books/add/', v.template_book_add, name='book_add'),
 
+    # ListView
+    path('books/class/list/all/', v.ListBooks.as_view(), name='book_list_class'),
+    
+   # DetailView
+    # path('books/class/<int:pk>', v.DetailBook.as_view(), name='book_detail_class'),
+    path('books/class/<int:book_id>/', v.DetailBook.as_view(), name='book_detail_class'),
+
     # path('index/list/', v.template_list),
 
     # path('req/', v.req),

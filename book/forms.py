@@ -1,5 +1,10 @@
 from django import forms
 
+from .models import books, publishing_house, category, order, pos_order, passport_book
+
+import re
+from django.core.exceptions import ValidationError
+
 
 class BookAddForm(forms.Form):
     name = forms.CharField(
@@ -81,3 +86,52 @@ class BookAddForm(forms.Form):
     #     ),
     #     widget=forms.CheckboxSelectMultiple
     # )
+
+
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = books
+        # fields = '__all__' # Все поля
+        fields = ['name', 'description', 'price', 'count_pages', 'publisher']
+
+        widgets = {
+            'name': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'descriptions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'price': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'count_pages': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'publisher': forms.Select(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+        }
+    
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        if re.match(r'\d', name):
+            raise ValidationError('Название не должно начинаться с цифры')
+        return name
+
+    def clean_telephone(self):
+        telephone = self.cleaned_data['telephone']
+        # if re.match(r'\+7\([0-9][0-9][0-9]\)[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]', telephone):  # +7(___)___-__-__
+        if re.match(r'\+7\(\d{3}\)\d{3}-\d{2}-\d{2}', telephone): # +7(___)___-__-__
+            raise ValidationError('Формат записи телефона:+7(___)___-__-__')
+        return telephone

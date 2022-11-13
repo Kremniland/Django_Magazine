@@ -64,9 +64,9 @@
                     <span class="input-group-text">{{ field.label }}</span>
                     {{ field }}
 
-                    <div id="{{ field.auto_id }}" class="invalid-feedback ">
+                    {% if field.errors %}
                         {{ field.errors }}
-                    </div>
+                    {% endif %}
                 </div>
             {% endfor %}
 
