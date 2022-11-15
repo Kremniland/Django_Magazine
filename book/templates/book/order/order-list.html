@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <a href="{% url 'publishing_house_add' %}" class="btn btn-success btn-outline-info">Добавить издательство</a>
+    </div>
+
+    <div class="container">
+
+        <div class="row row-cols-1 row-cols-md-1 g-2">
+
+            {% for publishing in publishing_list %}
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <p class="card-text">{{ publishing.title }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                       <a href="{% url 'publishing_detail' publishing.pk %}" type="button"
+                                       class="btn btn-sm btn-outline-secondary">Подробнее...</a>                          
+                                </div>
+                                <small class="text-muted">Телефон издательства:{{ publishing.agent_telephone }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

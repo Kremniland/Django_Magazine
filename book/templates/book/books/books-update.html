@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Изменение {{ object.name }}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text">{{ field.label }}</span>
+                    {{ field }}
+
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+
+            <button type="submit" class="btn btn-success btn-lg">Добавить книгу</button>
+            <br>
+        </form>
+    </div>
+
+
+    <div class="container">
+        <a href="{% url 'book_list' %}" class="btn btn-info btn-lg">Вернутся к списку книг</a>
+    </div>
+{% endblock %}

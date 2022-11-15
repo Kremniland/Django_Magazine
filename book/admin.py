@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import books, publishing_house, passport_book, order, pos_order
+from .models import books, publishing_house, passport_book, order, pos_order, category
 
 
 # Отображение списка в админке
@@ -23,3 +23,4 @@ admin.site.register(publishing_house)
 admin.site.register(passport_book)
 admin.site.register(order)
 admin.site.register(pos_order)
+admin.site.register(category)

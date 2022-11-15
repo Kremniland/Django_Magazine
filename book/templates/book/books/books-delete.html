@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Удаление {{ object.name }}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+
+            Действительно вы хотите удалить книгу {{ object.name }}
+
+            <button type="submit" class="btn btn-success btn-lg">Да хочу удалить книгу</button>
+            <br>
+        </form>
+    </div>
+
+
+    <div class="container">
+        <a href="{{ object.get_absolute_url }}" class="btn btn-info btn-lg">Вернутся к описанию книги</a>
+    </div>
+{% endblock %}

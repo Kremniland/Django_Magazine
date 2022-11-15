@@ -1,5 +1,7 @@
 from django.db import models
 
+from django.urls import reverse
+
 
 class books(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название книги')
@@ -23,6 +25,8 @@ class books(models.Model):
         verbose_name_plural = 'Книги'  # Псевдоним таблицы во мн. числе
         ordering = ['name', '-price']  # Сортировка полей
 
+    def get_absolute_url(self): # Определение страницы по умолчанию
+        return reverse('book_detail_class', kwargs={'book_id': self.pk})
 
 # Books
 #   name

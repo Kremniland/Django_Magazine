@@ -2,9 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import books, publishing_house, category, order, pos_order, passport_book
-from .forms import BookAddForm, BookForm  # BookAddForm - Form, BookForm - ModelForm
+from .forms import BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
 
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
+
+from django.urls import reverse, reverse_lazy
+
+from django.core.paginator import Paginator
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -31,12 +35,23 @@ def template_list(request):
         }
     return render(request, 'book/list.html', context)
 
-
+# С пагинацией страниц
 def template_book_list(request):
     book_list = books.objects.order_by('name')
+    paginator = Paginator(book_list, 2)
+    print(paginator)
+    print(paginator.count)
+    print(paginator.object_list)
+    print(paginator.page(2).object_list)
+    print(paginator.page_range)
+    print(paginator.num_pages)
+
+    page_num = request.GET.get('page',1) # Получаем значение страницы
+    page_obj = paginator.get_page(page_num) # Получаем саму страницу по значению (часть из нашего множества)
     context = {
         'title': 'Список книг',
-        'book_list': book_list
+        'book_list': book_list,
+        'page_obj': page_obj,
     }
     return render(request, 'book/books/books-list.html', context)
 
@@ -48,6 +63,7 @@ def template_book_detail(request, book_id):
         # 'title': 'Книга: ' + book_one.name,
         # 'title': book_one.name,
         'book': book_one,
+        'categories': book_one.category_set.all()
     }
     return render(request, 'book/books/books-detail.html', context)
 
@@ -88,6 +104,9 @@ def template_book_detail(request, book_id):
 #                 price=bookform_post.cleaned_data['price'],
 #                 description=bookform_post.cleaned_data['description'],
 #             )
+            # Сохранения выбранных категорий в книгу
+            # for categ in bookForm.cleaned_data['category']:
+            #     book_one.category_set.add(categ)
 
 #             return HttpResponseRedirect('/book/books/list/all/')
         
@@ -168,6 +187,21 @@ class DetailBook(DetailView):
     template_name = 'book/books/books-detail.html'
     context_object_name = 'book' # По умолчанию object
     pk_url_kwarg = 'book_id'  # Переопределение получаемого параметра
+    
+    def get_context_data(self, *, object_list=None, **kwargs):  # Переопределение метода для добавления доп. данных
+        context = super().get_context_data(**kwargs)
+        # Получение категорий из объекта книги
+        context['categories'] = context['book'].category_set.all()
+
+        # Добавление связи книги и категории
+        # book_one = books.objects.get(pk=1)
+        # categ = category.objects.get(pk=2)
+        #
+        # book_one.category_set.add(categ)
+        #
+        # # Создание категории из книги
+        # book_one.category_set.create(name='Детектив', description='')
+        return context
 # ==
 # def template_book_detail(request, book_id):
 #     # book_one = books.objects.get(pk=book_id)
@@ -178,6 +212,116 @@ class DetailBook(DetailView):
 #         'book': book_one,
 #     }
 #     return render(request, 'book/books/books-detail.html', context)    
+
+def template_publishing_house_add(request):
+    if request.method == 'POST':
+        publishing_house_form = PublishingHouseForm(request.POST)
+        if publishing_house_form.is_valid():
+            publishing_house.objects.create(
+                **publishing_house_form.cleaned_data
+            )
+            return HttpResponseRedirect('/book/publishing/list/all/')
+        else:
+            context = {
+                'title': 'Добавление издательства',
+                'publishing_form': publishing_house_form,
+            }
+            return render(request, 'book/books/publishing-add.html', context)                    
+    publishing_house_form = PublishingHouseForm()
+    context = {
+        'title': 'Заполнение анкеты издательства',
+        'publishing_form': publishing_house_form,
+    }
+    return render(request, 'book/publishing/publishing-add.html', context)
+
+class ListPublishing(ListView):
+    model = publishing_house
+    template_name = 'book/publishing/publishing-list.html'
+    context_object_name = 'publishing_list'
+    
+    def get_context_data(self, *, object_list=None, **kwargs): # Переопределение метода для добавления доп. данных
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Список издательств'
+        return context
+
+class DetailPublishing(DetailView):
+    model = publishing_house
+    template_name = 'book/publishing/publishing-detail.html'
+    pk_url_kwarg = 'publishing_id'  # Переопределение получаемого параметра
+    context_object_name = 'publishing'
+
+def template_category_add(request):
+    if request.method == 'POST':
+        category_form = CategoryForm(request.POST)
+        if category_form.is_valid():
+            category.objects.create(
+                title=category_form.cleaned_data['title'],
+                description=category_form.cleaned_data['description'],
+                # books=category_form.changed_data['books'],
+            )
+            return HttpResponseRedirect('/book/category/list/all/')
+    else:
+        category_form = CategoryForm()
+    context = {
+        'title': 'Заполнение категорий',
+        'category_form': category_form,
+    }
+    return render(request, 'book/category/category-add.html', context)
+        
+class ListCategory(ListView):
+    model = category
+    template_name = 'book/category/category-list.html'
+    context_object_name = 'category_list'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Список жанров'
+        return context
+
+def template_order_add(request):
+    if request.method == 'POST':
+        order_form = OrderForm(request.POST)
+        if order_form.is_valid():
+            order.objects.create(
+                date_finish=order_form.cleaned_data['date_finish'],
+                price=order_form.cleaned_data['price'],
+                address_delivery=order_form.cleaned_data['address_delivery'],
+                # books=order_form.cleaned_data['books']
+                # **order_form.cleaned_data
+            )
+            return HttpResponseRedirect('/book/order/list/all/')
+    else:
+        order_form = OrderForm()
+    context = {
+        'title': 'Заполнение заказа',
+        'order_form': order_form,
+    }
+    return render(request, 'book/order/order-add.html', context)
+
+class CreateBook(CreateView):
+    model = books
+    form_class = BookForm  # Форма, которая будет использоваться
+    template_name = 'book/books/books-add.html'
+    # context_object_name = 'custom_form'
+    success_url = reverse_lazy('book_list_class')  # Путь переадресации при успешном добавлении
+
+
+# HttpResponseRedirect('/book/books/index/') -> Переадресация по пути
+# reverse('book_list_class') -> book/books/class/list/all/ - возврат пути указанного имени
+
+# redirect('book_list_detail') -> Переадресация по названию пути == HttpResponseRedirect(reverse('book_list_detail'))
+
+class UpdateBook(UpdateView):
+    model = books
+    form_class = BookForm
+    template_name = 'book/books/books-update.html'
+    pk_url_kwarg = 'book_id'
+
+class DeleteBook(DeleteView):
+    model = books
+    template_name = 'book/books/books-delete.html'
+    success_url = reverse_lazy('book_list_class')
+
 
 # --------------------------------------------------
 def req(request):

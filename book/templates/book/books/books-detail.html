@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-
+{{ book_detail }}
     <div class="container text-lg-start">
         <div class="row align-items-center">
             <div class="col">
@@ -22,12 +22,30 @@
                     <li class="list-group-item">Название: {{ book.name }}</li>
                     <li class="list-group-item">Кол-во страниц: {{ book.count_pages }}</li>
                     <li class="list-group-item">Цена: {{ book.price }}</li>
+
+                    <ul class="list-group">Категории:
+                    {% for category in categories %}
+                        <li class="list-group-item"> {{ category.title }}</li>
+                    {% endfor %}
+                    </ul>
+
                 </ul>
             </div>
             <div class="col">
                 <p>Описание: {{ book.description }}</p>
             </div>
         </div>
+    </div>
+
+    <div class="list-group">
+        <a href="{% url 'book_update_class' book.pk %}" class="btn btn-warning">Редактировать {{ book.name }}</a>
+        <a href="{% url 'book_delete_class' book.pk %}" class="btn btn-danger">Удалить {{ book.name }}</a>
+
+    <form method="post" action="{% url 'book_delete_class' book.pk %}">
+        {% csrf_token %}
+        <input class="btn btn-danger" type="submit" value="Удалить без подтверждения">
+    </form>
+
     </div>
 
     {% comment content_one_book %}

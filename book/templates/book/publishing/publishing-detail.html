@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Издательство: {{ publishing.title }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container text-lg-start">
+        <div class="row align-items-center">
+            <div class="col">
+                <ul class="list-group">
+                    <li class="list-group-item">Название: {{ publishing.title }}</li>
+                    <li class="list-group-item">Фамилия представителя: {{ publishing.agent_firstname }}</li>
+                    <li class="list-group-item">Имя представителя: {{ publishing.agent_name }}</li>
+                    <li class="list-group-item">Отчество представителя: {{ publishing.agent_patronymic }}</li>
+                    <li class="list-group-item">Телефон представителя: {{ publishing.agent_telephone }}</li>
+                </ul>
+                <div class="container">
+                    <a href="{% url 'publishing_list' %}" class="btn btn-info btn-lg">Вернутся к списку издательств</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}

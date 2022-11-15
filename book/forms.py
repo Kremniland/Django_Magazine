@@ -58,6 +58,12 @@ class BookAddForm(forms.Form):
             }
         )
     )
+    category = forms.ModelMultipleChoiceField(
+        label='Жанры',
+        queryset=category.objects.all(),
+        widget=forms.CheckboxSelectMultiple(),
+    )
+ 
     # bool_field = forms.BooleanField()
     # email_field = forms.EmailField()
     # file_field = forms.FileField()
@@ -135,3 +141,105 @@ class BookForm(forms.ModelForm):
         if re.match(r'\+7\(\d{3}\)\d{3}-\d{2}-\d{2}', telephone): # +7(___)___-__-__
             raise ValidationError('Формат записи телефона:+7(___)___-__-__')
         return telephone
+
+
+class PublishingHouseForm(forms.ModelForm):
+    class Meta:
+        model = publishing_house
+        fields = ['title', 'agent_firstname', 'agent_name','agent_patronymic','agent_telephone']
+        
+        widgets = {
+            'title': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'agent_firstname': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'agent_name': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'agent_patronymic': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'agent_telephone': forms.NumberInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+        }
+    
+    def clean_agent_telephone(self):
+        agent_telephone = self.cleaned_data['agent_telephone']
+        if re.match(r'\+7\(\d{3}\)\d{3}-\d{2}-\d{2}', agent_telephone):
+            raise ValidationError('Формат записи телефона:+7(___)___-__-__')
+        return agent_telephone
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = category
+        fields = ['title', 'description', 'books']
+
+        widgets = {
+            'title': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'descriptions': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'books': forms.SelectMultiple(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            )
+        }
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = order
+        fields = ['date_finish', 'price', 'address_delivery']
+
+        widgets = {            
+            'date_finish': forms.SelectDateWidget(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'price': forms.NumberInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            'address_delivery': forms.TextInput(
+                attrs={
+
+                    'class': 'form-control',
+                }
+            ),
+            # 'books': forms.SelectMultiple(
+            #     attrs={
+
+            #         'class': 'form-control',
+            #     }
+            # ),
+        }

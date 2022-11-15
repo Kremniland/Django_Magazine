@@ -14,22 +14,26 @@
 
 {% block content %}
 
+    {{ title }}
+    {{ count_pub }}
     <div class="container">
         <a href="{% url 'book_add' %}" class="btn btn-success btn-outline-info">Добавить книгу</a>
+        <a href="{% url 'book_add_class' %}" class="btn btn-success btn-outline-info">Добавить книгу(class)</a>
     </div>
 
     <div class="container">
 
         <div class="row row-cols-1 row-cols-md-2 g-2">
 
-            {% for book in book_list %}
+            {#            {% for book in book_list %} #}
+            {% for book in page_obj.object_list %}
                 <div class="col">
                     <div class="card shadow-sm">
 
                         {% if book.photo %}
-                            <img src="{{ book.photo.url }}" height="400" class="card-img-top" alt="...">
+                            <img src="{{ book.photo.url }}" width="400" height="400" class="card-img-top" alt="...">
                         {% else %}
-                            <img src="{% static 'image/book_icon.jpeg' %}" height="400" class="card-img-top" alt="...">
+                            <img src="{% static 'image/book_icon.jpeg' %}" width="400" height="400" class="card-img-top" alt="...">
                         {% endif %}
                         <div class="card-body">
                             <p class="card-text">{{ book.name }}</p>
@@ -37,8 +41,10 @@
                                 <div class="btn-group">
                                     <a href="{% url 'book_detail' book.pk %}" type="button"
                                        class="btn btn-sm btn-outline-secondary">Подробнее...</a>
-                                       <a href="{% url 'book_detail_class' book.pk %}" type="button"
-                                       class="btn btn-sm btn-outline-secondary">Подробнее(class)...</a>                          
+                                    <a href="{% url 'book_detail_class' book.pk %}" type="button"
+                                       class="btn btn-sm btn-outline-secondary">Подробнее(class)...</a>
+                                    <a href="{{ book.get_absolute_url }}" type="button"
+                                       class="btn btn-sm btn-outline-secondary">Подробнее(get absolute url)...</a>
                                 </div>
                                 <small class="text-muted">{{ book.price }}</small>
                             </div>
@@ -48,6 +54,41 @@
             {% endfor %}
         </div>
     </div>
+    <div class="container">
+        <div class="row align-items-center">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
 
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                    {% for page in page_obj.paginator.page_range %}
+                        {% if page_obj.number == page %}
+                            <li class="page-item active" aria-current="page"><a class="page-link"
+                                                                                href="?page={{ page }}">{{ page }}</a>
+                            </li>
+
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page }}">{{ page }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
 {% endblock %}
 
