@@ -63,11 +63,11 @@
                 <div class="input-group mb-3">
                     <span class="input-group-text">{{ field.label }}</span>
                     {{ field }}
-
-                    {% if field.errors %}
-                        {{ field.errors }}
-                    {% endif %}
                 </div>
+
+                {% if field.errors %}
+                    {{ field.errors }}
+                {% endif %}
             {% endfor %}
 
 

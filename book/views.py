@@ -2,13 +2,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import books, publishing_house, category, order, pos_order, passport_book
-from .forms import BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
+from .forms import RegistrationForm, LoginForm, BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
 
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
 from django.urls import reverse, reverse_lazy
 
 from django.core.paginator import Paginator
+
+from book.utils import DefaultValue
+
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -38,7 +43,7 @@ def template_list(request):
 # С пагинацией страниц
 def template_book_list(request):
     book_list = books.objects.order_by('name')
-    paginator = Paginator(book_list, 2)
+    paginator = Paginator(book_list, 1)
     print(paginator)
     print(paginator.count)
     print(paginator.object_list)
@@ -147,14 +152,15 @@ def template_book_add(request):
         bookForm = BookForm()
     context = {
         'title': 'Добавление новой книги',
-        'custom_form': bookForm,
+        'form': bookForm,
     }
     return render(request, 'book/books/books-add.html', context)
 
 # class
 # ListView
 
-class ListBooks(ListView):  # Возврат листа объектов (книг)
+# Используем Mixin(DefaultValue)
+class ListBooks(ListView, DefaultValue):  # Возврат листа объектов (книг)
     model = books  # Определяем модель для получения данных
     template_name = 'book/books/books-list.html'  # Установка шаблона
     context_object_name = 'book_list'  # Изменение ключа для передачи данных (object_list)
@@ -162,10 +168,19 @@ class ListBooks(ListView):  # Возврат листа объектов (кни
         'title': 'Список книг из класса'
     }
 
+    paginate_by = 4
+
     def get_context_data(self, *, object_list=None, **kwargs): # Переопределение метода для добавления доп. данных
         context = super().get_context_data(**kwargs)
+        
+        # Добавляем из своего класса заголовок по умолчанию:
+        context = self.template_title_value(context)
+        
         context['title'] = 'Список книг из класса (полученные внутри метода get_context_data)'
         context['count_pub'] = publishing_house.objects.all().count()
+        
+        # Получение категорий
+        context['categories'] = category.objects.all()
         return context
 
     def get_queryset(self): # Переопределение запроса
@@ -182,7 +197,7 @@ class ListBooks(ListView):  # Возврат листа объектов (кни
 
 # DetailView
 
-class DetailBook(DetailView):
+class DetailBook(DetailView, DefaultValue):
     model = books
     template_name = 'book/books/books-detail.html'
     context_object_name = 'book' # По умолчанию object
@@ -190,6 +205,9 @@ class DetailBook(DetailView):
     
     def get_context_data(self, *, object_list=None, **kwargs):  # Переопределение метода для добавления доп. данных
         context = super().get_context_data(**kwargs)
+        # Добавляем из своего класса заголовок по умолчанию:
+        context = self.template_title_value(context)
+        
         # Получение категорий из объекта книги
         context['categories'] = context['book'].category_set.all()
 
@@ -212,6 +230,124 @@ class DetailBook(DetailView):
 #         'book': book_one,
 #     }
 #     return render(request, 'book/books/books-detail.html', context)    
+
+class CreateBook(CreateView, DefaultValue):
+    model = books
+    form_class = BookForm  # Форма, которая будет использоваться
+    template_name = 'book/books/books-add.html'
+    # context_object_name = 'custom_form'
+    success_url = reverse_lazy('book_list_class')  # Путь переадресации при успешном добавлении
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context = self.template_title_value(context)
+        return context
+
+
+# HttpResponseRedirect('/book/books/index/') -> Переадресация по пути
+# reverse('book_list_class') -> book/books/class/list/all/ - возврат пути указанного имени
+
+# redirect('book_list_detail') -> Переадресация по названию пути == HttpResponseRedirect(reverse('book_list_detail'))
+
+class UpdateBook(UpdateView):
+    model = books
+    form_class = BookForm
+    template_name = 'book/books/books-update.html'
+    pk_url_kwarg = 'book_id'
+
+class DeleteBook(DeleteView):
+    model = books
+    template_name = 'book/books/books-delete.html'
+    success_url = reverse_lazy('book_list_class')
+
+# Category
+class DetailCategory(DetailView):
+    model = category
+    template_name = 'book/category/category-detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+          # context['list_books'] = category.objects.get(pk=context['pk']).books.all()
+        context['list_books'] = context['object'].books.all()
+        return context
+
+# Registration
+def user_registration(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        # form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            print(user)
+            # Войдет сразу после регистрации
+            login(request, user)
+            return redirect('log in')
+    else:
+        form = RegistrationForm()
+        # form = UserCreationForm()
+    return render(request, 'book/auth/registration.html', {'form': form})
+
+def user_login(request):
+    if request.method == 'POST':
+        # form = AuthenticationForm(data=request.POST)
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            print('auth: ',request.user.is_authenticated)
+            print('anon: ',request.user.is_anonymous)
+            login(request, user)
+            print('auth: ', request.user.is_authenticated)
+            print('anon: ', request.user.is_anonymous)
+            return redirect('book_list_class')
+    else:
+        # form = AuthenticationForm()
+        form = LoginForm()
+    return render(request, 'book/auth/login.html', {'form': form})
+
+def user_logout(request):
+    logout(request)
+    return redirect('log in')
+
+
+# --------------------------------------------------
+def req(request):
+    print(request)
+    return HttpResponse('request in print')
+
+
+def tag(request):
+    print(request.META)
+    return HttpResponse('<h1>Hello HTML</h1>')
+
+
+def html_page(request):
+    book_list = ['Муму', '1984', '451 градус по Фаренгейту']
+    res = ''
+    for item in book_list:
+        res += f'<h1>{item}</h1>'
+    return HttpResponse(res)
+
+
+def req_META(request):
+    meta_output = ''
+    for key, value in request.META.items():
+        meta_output += f'{key}: {value}<br>'
+
+    return HttpResponse(f"""
+    <h2>Запрос пользователя</h2>
+    <p>Схема запроса: {request.scheme}</p>
+    <p>Тело запроса: {request.body}</p>
+    <p>Путь запроса: {request.path}</p>
+    <p>Метод запроса: {request.method}</p>
+    <p>Параметры GET: {request.GET}</p>
+    <p>Параметры POST: {request.POST}</p>
+    <p>Параметры COOKIES: {request.COOKIES}</p>
+    <p>Параметры FILES: {request.FILES}</p>
+    <br>
+    <div>{meta_output}</div>
+    """)
+
+# ============================== МОИ ДОБАВЛЕНИЯ ===============================
 
 def template_publishing_house_add(request):
     if request.method == 'POST':
@@ -297,66 +433,3 @@ def template_order_add(request):
         'order_form': order_form,
     }
     return render(request, 'book/order/order-add.html', context)
-
-class CreateBook(CreateView):
-    model = books
-    form_class = BookForm  # Форма, которая будет использоваться
-    template_name = 'book/books/books-add.html'
-    # context_object_name = 'custom_form'
-    success_url = reverse_lazy('book_list_class')  # Путь переадресации при успешном добавлении
-
-
-# HttpResponseRedirect('/book/books/index/') -> Переадресация по пути
-# reverse('book_list_class') -> book/books/class/list/all/ - возврат пути указанного имени
-
-# redirect('book_list_detail') -> Переадресация по названию пути == HttpResponseRedirect(reverse('book_list_detail'))
-
-class UpdateBook(UpdateView):
-    model = books
-    form_class = BookForm
-    template_name = 'book/books/books-update.html'
-    pk_url_kwarg = 'book_id'
-
-class DeleteBook(DeleteView):
-    model = books
-    template_name = 'book/books/books-delete.html'
-    success_url = reverse_lazy('book_list_class')
-
-
-# --------------------------------------------------
-def req(request):
-    print(request)
-    return HttpResponse('request in print')
-
-
-def tag(request):
-    print(request.META)
-    return HttpResponse('<h1>Hello HTML</h1>')
-
-
-def html_page(request):
-    book_list = ['Муму', '1984', '451 градус по Фаренгейту']
-    res = ''
-    for item in book_list:
-        res += f'<h1>{item}</h1>'
-    return HttpResponse(res)
-
-
-def req_META(request):
-    meta_output = ''
-    for key, value in request.META.items():
-        meta_output += f'{key}: {value}<br>'
-
-    return HttpResponse(f"""
-    <h2>Запрос пользователя</h2>
-    <p>Схема запроса: {request.scheme}</p>
-    <p>Тело запроса: {request.body}</p>
-    <p>Путь запроса: {request.path}</p>
-    <p>Метод запроса: {request.method}</p>
-    <p>Параметры GET: {request.GET}</p>
-    <p>Параметры POST: {request.POST}</p>
-    <p>Параметры COOKIES: {request.COOKIES}</p>
-    <p>Параметры FILES: {request.FILES}</p>
-    <br>
-    <div>{meta_output}</div>
-    """)

@@ -68,6 +68,9 @@ class category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+    
+    def get_absolute_url(self):
+        return reverse('category_detail_class', kwargs={'pk': self.pk})
 
 
 # Связь многие ко многим (через ручную техническую таблицу)

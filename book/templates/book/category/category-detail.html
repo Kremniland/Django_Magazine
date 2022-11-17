@@ -1,0 +1,50 @@
+{{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Категория: {{ object.title }}
+{% endblock %}
+
+{% block content %}
+    <div class="container text-lg-start">
+        <div class="row align-items-center">
+            <div class="col">
+                <ul class="list-group">
+                    <li class="list-group-item">Название: {{ object.title }}</li>
+                </ul>
+            </div>
+            <div class="col">
+                <p>Описание: {{ object.description }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-4">
+                {% for book in list_books %}
+                    <div class="col">
+                        <div class="card shadow-sm">
+
+                            {% if book.photo %}
+                                <img src="{{ book.photo.url }}" class="card-img-top" alt="...">
+                            {% else %}
+                                <img src="{% static 'image/book_icon.jpeg' %}" class="card-img-top" alt="...">
+                            {% endif %}
+                            <div class="card-body">
+                                <p class="card-text">{{ book.name }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <a href="{% url 'book_detail' book.pk %}" type="button"
+                                           class="btn btn-sm btn-outline-secondary">Подробнее...</a>
+                                    </div>
+                                    <small class="text-muted">{{ book.price }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

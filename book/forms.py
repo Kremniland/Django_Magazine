@@ -5,6 +5,8 @@ from .models import books, publishing_house, category, order, pos_order, passpor
 import re
 from django.core.exceptions import ValidationError
 
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
 
 class BookAddForm(forms.Form):
     name = forms.CharField(
@@ -243,3 +245,41 @@ class OrderForm(forms.ModelForm):
             #     }
             # ),
         }
+
+class RegistrationForm(UserCreationForm):
+    username = forms.CharField(
+        label='Логин пользователя',
+        widget= forms.TextInput(attrs={'class': 'form-control',}),
+        min_length=2,
+    )
+    email = forms.CharField(
+        label='Электронная почта',
+        widget=forms.EmailInput(attrs={'class': 'form-control', }),
+    )
+    password1 = forms.CharField(
+        label='Придумайте пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', }),
+    )
+    password2 = forms.CharField(
+        label='Повторите пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', }),
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+        # widgets = {
+        #     'username': forms.TextInput(attrs={'class': 'form-control',}),
+        # }
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        label='Ваш логин',
+        widget=forms.TextInput(attrs={'class': 'form-control', }),
+        min_length=2,
+    )
+    password = forms.CharField(
+        label='Ваш пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', }),
+    )

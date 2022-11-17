@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    Авторизация
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_div }}           
+
+            <button type="submit" class="btn btn-success btn-lg">Авторизоваться</button>
+            <br>
+        </form>
+        <a class="btn btn-info btn-lg"  href="{% url 'book_list_class' %}">Назад</a>
+        <a class="btn btn-warning btn-lg"  href="{% url 'regis' %}">Регистрация</a>
+    </div>
+
+{% endblock %}

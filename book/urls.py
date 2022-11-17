@@ -12,25 +12,30 @@ urlpatterns = [
     path('category/add/', v.template_category_add, name='category_add'),
     path('order/add/', v.template_order_add, name='order_add'),
 
-    # ListView
+# ListView
     path('books/class/list/all/', v.ListBooks.as_view(), name='book_list_class'),
     path('publishing/list/all/', v.ListPublishing.as_view(), name='publishing_list'),
     path('category/list/all/', v.ListCategory.as_view(), name='category_list'),
 
-   # DetailView
+# DetailView
     # path('books/class/<int:pk>', v.DetailBook.as_view(), name='book_detail_class'),
     path('books/class/<int:book_id>/', v.DetailBook.as_view(), name='book_detail_class'),
     path('publishing/<int:publishing_id>/', v.DetailPublishing.as_view(), name='publishing_detail'),
+    path('category/<int:pk>/', v.DetailCategory.as_view(), name='category_detail_class'),
 
-    # CreateView
+# CreateView
     path('books/class/add/', v.CreateBook.as_view(), name='book_add_class'),
 
-    # UpdateView
+# UpdateView
     path('books/class/update/<int:book_id>', v.UpdateBook.as_view(), name='book_update_class'),
  
-    # DeleteView
+# DeleteView
     path('books/class/delete/<int:pk>', v.DeleteBook.as_view(), name='book_delete_class'),
- 
+
+ # Регистрация и авторизация
+    path('registration/', v.user_registration, name='regis'),
+    path('login/', v.user_login, name='log in'),
+    path('logout/', v.user_logout, name='log out'),
 
     # path('index/list/', v.template_list),
 
