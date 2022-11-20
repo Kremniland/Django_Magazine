@@ -37,6 +37,20 @@ urlpatterns = [
     path('login/', v.user_login, name='log in'),
     path('logout/', v.user_logout, name='log out'),
 
+# Проверка регистрации
+    path('is_login_user/', v.is_login_user),
+    path('is_login_required/', v.is_login_required),
+
+# Проверка прав доступа
+    path('is_permission/', v.is_permission),
+
+    path('is_add/', v.is_perm_add),
+    path('is_change/', v.is_perm_change),
+    path('is_add_and_change/', v.is_perm_add_and_change),
+
+# EMAIL
+    path('contact/', v.contact_email, name='contact_email'),
+
     # path('index/list/', v.template_list),
 
     # path('req/', v.req),

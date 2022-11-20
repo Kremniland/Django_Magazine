@@ -14,10 +14,12 @@
 {% block content %}
     {{ title }}
     {{ count_pub }}
-    <div class="container">
-        <a href="{% url 'book_add' %}" class="btn btn-success btn-outline-info">Добавить книгу</a>
-        <a href="{% url 'book_add_class' %}" class="btn btn-success btn-outline-info">Добавить книгу(class)</a>
-    </div>
+    {% if perms.book.add_books %}
+        <div class="container">
+            <a href="{% url 'book_add' %}" class="btn btn-success btn-outline-info">Добавить книгу</a>
+            <a href="{% url 'book_add_class' %}" class="btn btn-success btn-outline-info">Добавить книгу(class)</a>
+        </div>
+    {% endif %}
 
     <div class="container">
         <div class="row">

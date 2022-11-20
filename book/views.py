@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import books, publishing_house, category, order, pos_order, passport_book
-from .forms import RegistrationForm, LoginForm, BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
+from .forms import RegistrationForm, LoginForm, ContactForm, BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
 
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
@@ -14,6 +14,15 @@ from book.utils import DefaultValue
 
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
+
+from django.contrib import messages
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.utils.decorators import method_decorator
+
+
+from django.core.mail import send_mail, send_mass_mail
+from django.conf import settings
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -131,6 +140,7 @@ def template_book_detail(request, book_id):
 #     return render(request, 'book/books/books-add.html', context)
 
 # Добавление новой книги через ModelForm:
+@permission_required('book.add_books')
 def template_book_add(request):
     if request.method == "POST":
         bookForm = BookForm(request.POST)
@@ -243,6 +253,11 @@ class CreateBook(CreateView, DefaultValue):
         context = self.template_title_value(context)
         return context
 
+# Добавляем проверку на авторизированного пользователя:
+    @method_decorator(login_required) # Вставляем login_required для проверки регистрации    
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
 
 # HttpResponseRedirect('/book/books/index/') -> Переадресация по пути
 # reverse('book_list_class') -> book/books/class/list/all/ - возврат пути указанного имени
@@ -255,10 +270,20 @@ class UpdateBook(UpdateView):
     template_name = 'book/books/books-update.html'
     pk_url_kwarg = 'book_id'
 
+# Проверка прав доступа на изменение, при попытке изменить выведет 404
+    @method_decorator(permission_required('book.change_books'))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
 class DeleteBook(DeleteView):
     model = books
     template_name = 'book/books/books-delete.html'
     success_url = reverse_lazy('book_list_class')
+
+# Проверка прав доступа на удаление, при попытке удалить выведет 404
+    @method_decorator(permission_required('book.delete_books'))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 # Category
 class DetailCategory(DetailView):
@@ -281,7 +306,9 @@ def user_registration(request):
             print(user)
             # Войдет сразу после регистрации
             login(request, user)
+            messages.success(request, 'Вы успешно зарегистрировались')
             return redirect('log in')
+        messages.error(request, 'Что-то пошло не так')
     else:
         form = RegistrationForm()
         # form = UserCreationForm()
@@ -298,7 +325,9 @@ def user_login(request):
             login(request, user)
             print('auth: ', request.user.is_authenticated)
             print('anon: ', request.user.is_anonymous)
+            messages.success(request, 'Вы успешно авторизировались')
             return redirect('book_list_class')
+        messages.error(request, 'Что-то пошло не так')
     else:
         # form = AuthenticationForm()
         form = LoginForm()
@@ -306,7 +335,76 @@ def user_login(request):
 
 def user_logout(request):
     logout(request)
+    messages.warning(request, 'Вы вышли из аккаунта')
     return redirect('log in')
+
+# Метод проверки авторизации:
+def is_login_user(request):
+    if request.user.is_authenticated:
+        return HttpResponse('Вы зарегистрированный пользователь')
+    elif request.user.is_anonymous:
+        return HttpResponse('Вы анонимны для сайта')
+
+@login_required
+def is_login_required(request): # Если не авторизован выдаст 404
+    return HttpResponse('<h1>Вы авторизированный пользователь</h1>')
+
+# Проверка прав доступа:
+# request.user.has_perms проверяет список прав, hes_perm какое то одно право
+# request.user.has_perm('book.view_category') - <приложение>.<право>_<модель>
+def is_permission(request):
+    text = ''
+    if request.user.has_perm('book.change_books'):
+        text += '<h1>У вас имеется право на изменение книг</h1>'
+    if request.user.has_perm('book.view_category'):
+        text += '<h1>У вас имеется право на просмотр категорий</h1>'
+    if request.user.has_perm('book.add_books'):
+        text += '<h1>У вас имеется право на добавление книг</h1>'
+    if request.user.has_perm('book.delete_books'):
+        text += '<h1>У вас имеется право на удаление книг</h1>'
+    if text == '':
+        text += '<h1>Вы не имеет никаких прав доступа</h1>'
+    if request.user.is_anonymous:
+        text += '<h1>Вы не авторизовались</h1>'
+    if request.user.is_authenticated:
+        text += '<h1>Вы авторизовались</h1>'
+
+    if request.user.has_perms(['book.add_books', 'book.add_category']):
+        text += '<h1>Вы имеет право на добавление информации на сайт</h1>'
+
+    return HttpResponse(text)
+
+# ('book.add_books') - <приложение>.<право>_<модель>
+@permission_required('book.add_books')
+def is_perm_add(request):
+    return HttpResponse('<h1>Добавление книги</h1>')
+
+
+@permission_required('book.change_books')
+def is_perm_change(request):
+    return HttpResponse('<h1>Изменение книги</h1>')
+
+
+@permission_required(['book.add_books', 'book.change_books'])
+def is_perm_add_and_change(request):
+    return HttpResponse('<h1>Добавление и изменение книги</h1>')
+
+# EMAIL
+
+def contact_email(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            send_mail(
+                form.cleaned_data['subject'],
+                form.cleaned_data['content'],
+                settings.EMAIL_HOST_USER,
+                ['kremnilandk@gmail.com'],
+                fail_silently=False # При ошибке будет ее показывать, если True - то нет
+            )
+    else:
+        form = ContactForm()
+    return render(request, 'book/email.html', {'form': form})
 
 
 # --------------------------------------------------

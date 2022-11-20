@@ -145,4 +145,14 @@ MEDIA_URL = '/media/'
 INTERNAL_IPS = [    
     "127.0.0.1",
 ]
+
+# EMAIL
+
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'chausovo@mail.ru'
+EMAIL_HOST_PASSWORD = 'kremniland'
+EMAIL_USE_TLS = False # Шифрование TSL
+EMAIL_USE_SSL = False # Шифрование SSL
+
     

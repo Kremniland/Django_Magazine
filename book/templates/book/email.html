@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+            
+            {{ form.subject.label }}
+            {{ form.subject }}
+            
+            {{ form.content.label }}
+            {{ form.content }}
+
+            <!-- {% for field in form %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text">{{ field.label }}</span>
+                    {{ field }}
+                </div>
+
+                {% if field.errors %}
+                    {{ field.errors }}
+                {% endif %}
+            {% endfor %} -->
+
+
+            <button type="submit" class="btn btn-success btn-lg">Отправить сообщение</button>
+            <br>
+        </form>
+    </div>
+
+
+    <div class="container">
+        <a href="{% url 'book_list' %}" class="btn btn-info btn-lg">Вернутся к списку книг</a>
+    </div>
+{% endblock %}

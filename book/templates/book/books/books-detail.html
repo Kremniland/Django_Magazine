@@ -37,17 +37,24 @@
         </div>
     </div>
 
-    <div class="list-group">
-        <a href="{% url 'book_update_class' book.pk %}" class="btn btn-warning">Редактировать {{ book.name }}</a>
-        <a href="{% url 'book_delete_class' book.pk %}" class="btn btn-danger">Удалить {{ book.name }}</a>
+    <div class="container">
+        <div class="list-group">
 
-    <form method="post" action="{% url 'book_delete_class' book.pk %}">
-        {% csrf_token %}
-        <input class="btn btn-danger" type="submit" value="Удалить без подтверждения">
-    </form>
+            {% if perms.book.change_books %}
+                <a href="{% url 'book_update_class' book.pk %}" class="btn btn-warning">Редактировать {{ book.name }}</a>
+            {% endif %}
 
+            {% if perms.book.delete_books %}
+                <a href="{% url 'book_delete_class' book.pk %}" class="btn btn-danger">Удалить {{ book.name }}</a>
+            
+                <form method="post" action="{% url 'book_delete_class' book.pk %}">
+                    {% csrf_token %}
+                    <input class="btn btn-danger" type="submit" value="Удалить без подтверждения">
+                </form>                
+            {% endif %}
+
+        </div>
     </div>
-
     {% comment content_one_book %}
 
     <h2>{{ book.id }}</h2><br>
