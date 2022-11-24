@@ -1,6 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+
+from rest_framework.urlpatterns import format_suffix_patterns
 
 import book.views as v
+
+from rest_framework import routers
+
+router = routers.SimpleRouter()
+router.register(r'book-api', v.BookViewSet)
+
 
 urlpatterns = [
     path('index/', v.template_index),
@@ -55,7 +63,8 @@ urlpatterns = [
     path('api/books/', v.book_api_list, name='book_list_api'),
     path('api/books/<int:pk>', v.book_api_detail, name='book_detail_api'),
 
-    
+    path('viewset/', include(router.urls)),
+
     # path('index/list/', v.template_list),
 
     # path('req/', v.req),
@@ -63,3 +72,5 @@ urlpatterns = [
     # path('booklist/', v.html_page),
     # path('META/', v.req_META),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)

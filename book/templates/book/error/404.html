@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block link %}
+    <link href="{% static 'bootstrap/bootstrap-5.2.2-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    {# <link href="{% static 'css/home.css' %}" rel="stylesheet"> #}
+{% endblock %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block content %}
+    <h1> К сожалению, искомый ресурсы не был найден, но мы обязательно найдем</h1>
+    <a href="{% url 'book_list' %}" class="btn btn-success"> Переход на каталог книг</a>
+    {{ message }}
+{% endblock %}

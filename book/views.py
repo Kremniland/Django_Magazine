@@ -32,6 +32,8 @@ from .seializers import BooksSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework import viewsets
+
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -422,8 +424,10 @@ def contact_email(request):
         form = ContactForm()
     return render(request, 'book/email.html', {'form': form})
 
+# API
+
 @api_view(['GET', 'POST'])
-def book_api_list(request):
+def book_api_list(request, format=None): # format= - задаем формат вывода
     if request.method == 'GET':  # Получение данных
         # book_list = books.objects.all()
         book_list = books.objects.filter(exists=True)
@@ -442,26 +446,40 @@ def book_api_list(request):
 
 # Вывод изменение удаление смотря какой метод запроса
 @api_view(['GET', 'PUT', 'DELETE'])
-def book_api_detail(request, pk):
+def book_api_detail(request, pk, format=None): # format= - задаем формат вывода
     book_obj = get_object_or_404(books, pk=pk)
+    if book_obj.exists:
+        # Вывод
+        if request.method == 'GET':
+            serializer = BooksSerializer(book_obj)
+            return Response(serializer.data)
+        # Изменение
+        elif request.method == 'PUT':
+            serializer = BooksSerializer(book_obj, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'Данные успешно обновлены', 'book': serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Удаление
+        elif request.method == 'DELETE':
+            book_obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # Вывод
-    if request.method == 'GET':
-        serializer = BooksSerializer(book_obj)
-        return Response(serializer.data)
-    # Изменение
-    elif request.method == 'PUT':
-        serializer = BooksSerializer(book_obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Данные успешно обновлены', 'book': serializer.data})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    # Удаление
-    elif request.method == 'DELETE':
-        book_obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = books.objects.filter(exists=True)
+    serializer_class = BooksSerializer
 
+# Переопределение страниц с ошибками
+    
+def error_404(request, exception):
+    response = render(request, 'book/error/404.html', {'title': 'Страница не найдена', 'message': exception})
+    # При переопределении вернет статусный код
+    response.status_code = 404
+    return response
 
+    
 # --------------------------------------------------
 def req(request):
     print(request)
