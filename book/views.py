@@ -17,12 +17,21 @@ from django.contrib.auth import login, logout
 
 from django.contrib import messages
 
+# Registration Auth
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
 
-
+# EMAIL
 from django.core.mail import send_mail, send_mass_mail
 from django.conf import settings
+
+# API
+from django.http import JsonResponse
+from .seializers import BooksSerializer
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -53,12 +62,12 @@ def template_list(request):
 def template_book_list(request):
     book_list = books.objects.order_by('name')
     paginator = Paginator(book_list, 1)
-    print(paginator)
-    print(paginator.count)
-    print(paginator.object_list)
-    print(paginator.page(2).object_list)
-    print(paginator.page_range)
-    print(paginator.num_pages)
+    # print(paginator)
+    # print(paginator.count)
+    # print(paginator.object_list)
+    # print(paginator.page(2).object_list)
+    # print(paginator.page_range)
+    # print(paginator.num_pages)
 
     page_num = request.GET.get('page',1) # Получаем значение страницы
     page_obj = paginator.get_page(page_num) # Получаем саму страницу по значению (часть из нашего множества)
@@ -395,16 +404,62 @@ def contact_email(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            send_mail(
+            mail = send_mail(
                 form.cleaned_data['subject'],
                 form.cleaned_data['content'],
                 settings.EMAIL_HOST_USER,
                 ['kremnilandk@gmail.com'],
                 fail_silently=False # При ошибке будет ее показывать, если True - то нет
             )
+            if mail:
+                messages.success(request, 'Письмо успешно отправлено.')
+                return redirect('book_list_class')
+            else:
+                messages.error(request, 'Письмо не удалось отправить, попробуйте позже.')
+        else:
+            messages.warning(request, 'Письмо неверно заполнено, перепроверьте внесенные данные.')
     else:
         form = ContactForm()
     return render(request, 'book/email.html', {'form': form})
+
+@api_view(['GET', 'POST'])
+def book_api_list(request):
+    if request.method == 'GET':  # Получение данных
+        # book_list = books.objects.all()
+        book_list = books.objects.filter(exists=True)
+        serializer = BooksSerializer(book_list, many=True) # many=True для того что бы список принимался по отдельным объектам
+        print(serializer.data)
+        # return JsonResponse(serializer.data, safe=False)
+        # return JsonResponse({'books': serializer.data})
+        return Response({'books': serializer.data})
+    elif request.method == 'POST':  # Добавляем объект в БД
+        serializer = BooksSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            # при успешном добавлении
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Вывод изменение удаление смотря какой метод запроса
+@api_view(['GET', 'PUT', 'DELETE'])
+def book_api_detail(request, pk):
+    book_obj = get_object_or_404(books, pk=pk)
+
+    # Вывод
+    if request.method == 'GET':
+        serializer = BooksSerializer(book_obj)
+        return Response(serializer.data)
+    # Изменение
+    elif request.method == 'PUT':
+        serializer = BooksSerializer(book_obj, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Данные успешно обновлены', 'book': serializer.data})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Удаление
+    elif request.method == 'DELETE':
+        book_obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # --------------------------------------------------

@@ -51,6 +51,11 @@ urlpatterns = [
 # EMAIL
     path('contact/', v.contact_email, name='contact_email'),
 
+# API
+    path('api/books/', v.book_api_list, name='book_list_api'),
+    path('api/books/<int:pk>', v.book_api_detail, name='book_detail_api'),
+
+    
     # path('index/list/', v.template_list),
 
     # path('req/', v.req),

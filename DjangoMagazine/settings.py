@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'book.apps.BookConfig',  # Установка приложения
     'abook',
     'django_extensions',
+    'rest_framework' # djangorestframework
 ]
 
 MIDDLEWARE = [
@@ -151,8 +152,8 @@ INTERNAL_IPS = [
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = 'chausovo@mail.ru'
-EMAIL_HOST_PASSWORD = 'kremniland'
+EMAIL_HOST_PASSWORD = 'eHKXCCnWgAnpdRnfaecZ' # Пароль внешнего приложения
 EMAIL_USE_TLS = False # Шифрование TSL
-EMAIL_USE_SSL = False # Шифрование SSL
+EMAIL_USE_SSL = True # Шифрование SSL
 
     
