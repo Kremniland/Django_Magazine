@@ -36,7 +36,13 @@
             </div>
         </div>
     </div>
-
+    <div class="container">
+        <form method="post" action="{% url 'add_basket_prod' book.pk %}">
+            {% csrf_token %}
+            {{ basket_form }}
+            <input type="submit" class="btn btn-success" value="Добавить в корзину">
+        </form>
+    </div>
     <div class="container">
         <div class="list-group">
 

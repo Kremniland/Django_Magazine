@@ -1,20 +1,18 @@
 <div class="container">
     <header class="d-flex justify-content-center py-3">
         <ul class="nav nav-pills">
-            <li class="nav-item"><a href="/book/index" class="nav-link active" aria-current="page">Главная</a></li>
-            <li class="nav-item"><a href="{% url 'book_list' %}" class="nav-link">Каталог книг</a></li>
-            <li class="nav-item"><a href="{% url 'book_list_class' %}" class="nav-link">Каталог книг(ListView)</a></li>
-            <li class="nav-item"><a href="{% url 'publishing_list' %}" class="nav-link">Список издательств</a></li>
+{#            <li class="nav-item"><a href="/book/index" class="nav-link active" aria-current="page">Главная</a></li>#}
+{#            <li class="nav-item"><a href="{% url 'book_list' %}" class="nav-link">Каталог книг</a></li>#}
+            <li class="nav-item"><a href="{% url 'book_list_class' %}" class="nav-link">Каталог книг</a></li>
+{#            <li class="nav-item"><a href="{% url 'book_list_class' %}" class="nav-link">Каталог книг (ListView)</a></li>#}
         </ul>
-        
-            <div class="col-md-3 text-end">
-                {% if request.user.is_anonymous %}
-                    <a href="{% url 'log in' %}" class="btn btn-outline-primary me-2">Войти</a>
-                    <a href="{% url 'regis' %}" class="btn btn-primary">Зарегистрироваться</a>
-                {% else %}
-                    <a href="{% url 'log out' %}" class="btn btn-primary">Выйти</a>
-                {% endif %}
-            </div>
-        
+        <div class="col-md-3 text-end">
+            {% if request.user.is_anonymous %}
+                <a href="{% url 'log in' %}" class="btn btn-outline-primary me-2">Войти</a>
+                <a href="{% url 'regis' %}" class="btn btn-primary">Зарегистрироваться</a>
+            {% else %}
+                <a href="{% url 'log out' %}" class="btn btn-primary">Выйти</a>
+            {% endif %}
+        </div>
     </header>
 </div>

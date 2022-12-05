@@ -9,7 +9,7 @@ from django.views.defaults import ERROR_400_TEMPLATE_NAME
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('book/', include('book.urls')),
-    path('', include('abook.urls')),
+    path('basket/', include('basket.urls')),
 ]
 
 if settings.DEBUG:

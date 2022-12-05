@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 
 from .models import books, publishing_house, category, order, pos_order, passport_book
-from .forms import RegistrationForm, LoginForm, ContactForm, BookAddForm, BookForm, PublishingHouseForm, CategoryForm, OrderForm  # BookAddForm - Form, BookForm - ModelForm
+from .forms import RegistrationForm, LoginForm, ContactForm, BookAddForm, BookForm, PublishingHouseForm, CategoryForm, \
+    OrderForm  # BookAddForm - Form, BookForm - ModelForm
 
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 
@@ -34,6 +35,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import viewsets
 
+# BASKET
+from basket.forms import BasketAddProductForm
 
 def template_index(request):
     return render(request, 'book/index.html')
@@ -60,6 +63,7 @@ def template_list(request):
         }
     return render(request, 'book/list.html', context)
 
+
 # С пагинацией страниц
 def template_book_list(request):
     book_list = books.objects.order_by('name')
@@ -71,8 +75,8 @@ def template_book_list(request):
     # print(paginator.page_range)
     # print(paginator.num_pages)
 
-    page_num = request.GET.get('page',1) # Получаем значение страницы
-    page_obj = paginator.get_page(page_num) # Получаем саму страницу по значению (часть из нашего множества)
+    page_num = request.GET.get('page', 1)  # Получаем значение страницы
+    page_obj = paginator.get_page(page_num)  # Получаем саму страницу по значению (часть из нашего множества)
     context = {
         'title': 'Список книг',
         'book_list': book_list,
@@ -118,23 +122,23 @@ def template_book_detail(request, book_id):
 
 #         # Forms
 #         bookform_post = BookAddForm(request.POST)
-        
+
 #         # Если полученные со страницы данные валидируются:
 #         if bookform_post.is_valid():
 #             print(bookform_post.cleaned_data) # cleaned_data хранит данные прописанные на форме
 
-#             books.objects.create(
+#             book_one = books.objects.create(
 #                 name=bookform_post.cleaned_data['name'],
 #                 count_pages=bookform_post.cleaned_data['count_pages'],
 #                 price=bookform_post.cleaned_data['price'],
 #                 description=bookform_post.cleaned_data['description'],
 #             )
-            # Сохранения выбранных категорий в книгу
-            # for categ in bookForm.cleaned_data['category']:
-            #     book_one.category_set.add(categ)
+# Сохранения выбранных категорий в книгу
+#             for categ in bookForm.cleaned_data['category']:
+#                 book_one.category_set.add(categ)
 
 #             return HttpResponseRedirect('/book/books/list/all/')
-        
+
 #         # Если не валидируются просто вернем страницу:
 #         else:
 #             context = {
@@ -177,6 +181,7 @@ def template_book_add(request):
     }
     return render(request, 'book/books/books-add.html', context)
 
+
 # class
 # ListView
 
@@ -191,21 +196,23 @@ class ListBooks(ListView, DefaultValue):  # Возврат листа объек
 
     paginate_by = 4
 
-    def get_context_data(self, *, object_list=None, **kwargs): # Переопределение метода для добавления доп. данных
+    def get_context_data(self, *, object_list=None, **kwargs):  # Переопределение метода для добавления доп. данных
         context = super().get_context_data(**kwargs)
-        
+
         # Добавляем из своего класса заголовок по умолчанию:
         context = self.template_title_value(context)
-        
+
         context['title'] = 'Список книг из класса (полученные внутри метода get_context_data)'
         context['count_pub'] = publishing_house.objects.all().count()
-        
+
         # Получение категорий
         context['categories'] = category.objects.all()
         return context
 
-    def get_queryset(self): # Переопределение запроса
+    def get_queryset(self):  # Переопределение запроса
         return books.objects.filter(exists=True).order_by('release_date')
+
+
 # ==
 # def template_book_list(request):
 #     book_list = books.objects.order_by('name')
@@ -221,17 +228,17 @@ class ListBooks(ListView, DefaultValue):  # Возврат листа объек
 class DetailBook(DetailView, DefaultValue):
     model = books
     template_name = 'book/books/books-detail.html'
-    context_object_name = 'book' # По умолчанию object
+    context_object_name = 'book'  # По умолчанию object
     pk_url_kwarg = 'book_id'  # Переопределение получаемого параметра
-    
+
     def get_context_data(self, *, object_list=None, **kwargs):  # Переопределение метода для добавления доп. данных
         context = super().get_context_data(**kwargs)
         # Добавляем из своего класса заголовок по умолчанию:
         context = self.template_title_value(context)
-        
+
         # Получение категорий из объекта книги
         context['categories'] = context['book'].category_set.all()
-
+        context['basket_form'] = BasketAddProductForm()
         # Добавление связи книги и категории
         # book_one = books.objects.get(pk=1)
         # categ = category.objects.get(pk=2)
@@ -241,6 +248,8 @@ class DetailBook(DetailView, DefaultValue):
         # # Создание категории из книги
         # book_one.category_set.create(name='Детектив', description='')
         return context
+
+
 # ==
 # def template_book_detail(request, book_id):
 #     # book_one = books.objects.get(pk=book_id)
@@ -264,8 +273,8 @@ class CreateBook(CreateView, DefaultValue):
         context = self.template_title_value(context)
         return context
 
-# Добавляем проверку на авторизированного пользователя:
-    @method_decorator(login_required) # Вставляем login_required для проверки регистрации    
+    # Добавляем проверку на авторизированного пользователя:
+    @method_decorator(login_required)  # Вставляем login_required для проверки регистрации
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
@@ -281,20 +290,22 @@ class UpdateBook(UpdateView):
     template_name = 'book/books/books-update.html'
     pk_url_kwarg = 'book_id'
 
-# Проверка прав доступа на изменение, при попытке изменить выведет 404
+    # Проверка прав доступа на изменение, при попытке изменить выведет 404
     @method_decorator(permission_required('book.change_books'))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
+
 
 class DeleteBook(DeleteView):
     model = books
     template_name = 'book/books/books-delete.html'
     success_url = reverse_lazy('book_list_class')
 
-# Проверка прав доступа на удаление, при попытке удалить выведет 404
+    # Проверка прав доступа на удаление, при попытке удалить выведет 404
     @method_decorator(permission_required('book.delete_books'))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
+
 
 # Category
 class DetailCategory(DetailView):
@@ -303,9 +314,10 @@ class DetailCategory(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-          # context['list_books'] = category.objects.get(pk=context['pk']).books.all()
+        # context['list_books'] = category.objects.get(pk=context['pk']).books.all()
         context['list_books'] = context['object'].books.all()
         return context
+
 
 # Registration
 def user_registration(request):
@@ -325,14 +337,15 @@ def user_registration(request):
         # form = UserCreationForm()
     return render(request, 'book/auth/registration.html', {'form': form})
 
+
 def user_login(request):
     if request.method == 'POST':
         # form = AuthenticationForm(data=request.POST)
         form = LoginForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            print('auth: ',request.user.is_authenticated)
-            print('anon: ',request.user.is_anonymous)
+            print('auth: ', request.user.is_authenticated)
+            print('anon: ', request.user.is_anonymous)
             login(request, user)
             print('auth: ', request.user.is_authenticated)
             print('anon: ', request.user.is_anonymous)
@@ -344,10 +357,12 @@ def user_login(request):
         form = LoginForm()
     return render(request, 'book/auth/login.html', {'form': form})
 
+
 def user_logout(request):
     logout(request)
     messages.warning(request, 'Вы вышли из аккаунта')
     return redirect('log in')
+
 
 # Метод проверки авторизации:
 def is_login_user(request):
@@ -356,9 +371,11 @@ def is_login_user(request):
     elif request.user.is_anonymous:
         return HttpResponse('Вы анонимны для сайта')
 
+
 @login_required
-def is_login_required(request): # Если не авторизован выдаст 404
+def is_login_required(request):  # Если не авторизован выдаст 404
     return HttpResponse('<h1>Вы авторизированный пользователь</h1>')
+
 
 # Проверка прав доступа:
 # request.user.has_perms проверяет список прав, hes_perm какое то одно право
@@ -385,6 +402,7 @@ def is_permission(request):
 
     return HttpResponse(text)
 
+
 # ('book.add_books') - <приложение>.<право>_<модель>
 @permission_required('book.add_books')
 def is_perm_add(request):
@@ -400,6 +418,7 @@ def is_perm_change(request):
 def is_perm_add_and_change(request):
     return HttpResponse('<h1>Добавление и изменение книги</h1>')
 
+
 # EMAIL
 
 def contact_email(request):
@@ -411,7 +430,7 @@ def contact_email(request):
                 form.cleaned_data['content'],
                 settings.EMAIL_HOST_USER,
                 ['kremnilandk@gmail.com'],
-                fail_silently=False # При ошибке будет ее показывать, если True - то нет
+                fail_silently=False  # При ошибке будет ее показывать, если True - то нет
             )
             if mail:
                 messages.success(request, 'Письмо успешно отправлено.')
@@ -424,14 +443,16 @@ def contact_email(request):
         form = ContactForm()
     return render(request, 'book/email.html', {'form': form})
 
+
 # API
 
 @api_view(['GET', 'POST'])
-def book_api_list(request, format=None): # format= - задаем формат вывода
+def book_api_list(request, format=None):  # format= - задаем формат вывода
     if request.method == 'GET':  # Получение данных
         # book_list = books.objects.all()
         book_list = books.objects.filter(exists=True)
-        serializer = BooksSerializer(book_list, many=True) # many=True для того что бы список принимался по отдельным объектам
+        serializer = BooksSerializer(book_list,
+                                     many=True)  # many=True для того что бы список принимался по отдельным объектам
         print(serializer.data)
         # return JsonResponse(serializer.data, safe=False)
         # return JsonResponse({'books': serializer.data})
@@ -444,9 +465,10 @@ def book_api_list(request, format=None): # format= - задаем формат �
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 # Вывод изменение удаление смотря какой метод запроса
 @api_view(['GET', 'PUT', 'DELETE'])
-def book_api_detail(request, pk, format=None): # format= - задаем формат вывода
+def book_api_detail(request, pk, format=None):  # format= - задаем формат вывода
     book_obj = get_object_or_404(books, pk=pk)
     if book_obj.exists:
         # Вывод
@@ -467,19 +489,29 @@ def book_api_detail(request, pk, format=None): # format= - задаем форм
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
 class BookViewSet(viewsets.ModelViewSet):
     queryset = books.objects.filter(exists=True)
     serializer_class = BooksSerializer
 
+
 # Переопределение страниц с ошибками
-    
+
 def error_404(request, exception):
     response = render(request, 'book/error/404.html', {'title': 'Страница не найдена', 'message': exception})
     # При переопределении вернет статусный код
     response.status_code = 404
     return response
 
-    
+# SESSION
+
+def set_session_info(request):
+    request.session['test'] = '912'
+    return HttpResponse("Задали значение " + request.session.get('test'))
+
+def get_session_info(request):
+    session_info = request.session.get('test')
+    return HttpResponse(session_info)
 # --------------------------------------------------
 def req(request):
     print(request)
@@ -518,6 +550,7 @@ def req_META(request):
     <div>{meta_output}</div>
     """)
 
+
 # ============================== МОИ ДОБАВЛЕНИЯ ===============================
 
 def template_publishing_house_add(request):
@@ -533,7 +566,7 @@ def template_publishing_house_add(request):
                 'title': 'Добавление издательства',
                 'publishing_form': publishing_house_form,
             }
-            return render(request, 'book/books/publishing-add.html', context)                    
+            return render(request, 'book/books/publishing-add.html', context)
     publishing_house_form = PublishingHouseForm()
     context = {
         'title': 'Заполнение анкеты издательства',
@@ -541,21 +574,24 @@ def template_publishing_house_add(request):
     }
     return render(request, 'book/publishing/publishing-add.html', context)
 
+
 class ListPublishing(ListView):
     model = publishing_house
     template_name = 'book/publishing/publishing-list.html'
     context_object_name = 'publishing_list'
-    
-    def get_context_data(self, *, object_list=None, **kwargs): # Переопределение метода для добавления доп. данных
+
+    def get_context_data(self, *, object_list=None, **kwargs):  # Переопределение метода для добавления доп. данных
         context = super().get_context_data(**kwargs)
         context['title'] = 'Список издательств'
         return context
+
 
 class DetailPublishing(DetailView):
     model = publishing_house
     template_name = 'book/publishing/publishing-detail.html'
     pk_url_kwarg = 'publishing_id'  # Переопределение получаемого параметра
     context_object_name = 'publishing'
+
 
 def template_category_add(request):
     if request.method == 'POST':
@@ -574,7 +610,8 @@ def template_category_add(request):
         'category_form': category_form,
     }
     return render(request, 'book/category/category-add.html', context)
-        
+
+
 class ListCategory(ListView):
     model = category
     template_name = 'book/category/category-list.html'
@@ -584,6 +621,7 @@ class ListCategory(ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Список жанров'
         return context
+
 
 def template_order_add(request):
     if request.method == 'POST':

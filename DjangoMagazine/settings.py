@@ -39,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "debug_toolbar",
     'book.apps.BookConfig',  # Установка приложения
-    'abook',
     'django_extensions',
-    'rest_framework' # djangorestframework
+    'rest_framework', # djangorestframework
+    'basket', # Установка корзины
 ]
 
 MIDDLEWARE = [
@@ -128,7 +128,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'book/static'),
-    os.path.join(BASE_DIR, 'abook/static'),
     os.path.join(BASE_DIR, 'DjangoMagazine/static'),
 ]
 
@@ -157,5 +156,12 @@ EMAIL_HOST_USER = 'chausovo@mail.ru'
 EMAIL_HOST_PASSWORD = 'eHKXCCnWgAnpdRnfaecZ' # Пароль внешнего приложения
 EMAIL_USE_TLS = False # Шифрование TSL
 EMAIL_USE_SSL = True # Шифрование SSL
+
+# SESSION
+# Место сохранения сессий а .files означает что в файл .signed_cookies - в промежуточную табл бд:
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+# название и переменная для нашей корзины
+BASKET_SESSION_ID = 'basket'
+
 
     
